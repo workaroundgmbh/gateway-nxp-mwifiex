@@ -333,6 +333,8 @@ static mlan_status woal_do_flr(moal_handle *handle, bool prepare, bool flr_flag)
 
 	if (!prepare)
 		goto perform_init;
+	if (!handle->pmlan_adapter)
+		goto exit;
 
 	/* Reset all interfaces */
 	priv = woal_get_priv(handle, MLAN_BSS_ROLE_ANY);
@@ -417,6 +419,8 @@ perform_init:
 		PRINTM(MFATAL, "Software Init Failed\n");
 		goto err_init_fw;
 	}
+	if (!handle->pmlan_adapter)
+		goto err_init_fw;
 
 #if defined(PCIE9098)
 	if ((card->dev->device == PCIE_DEVICE_ID_88W9098P_FN1) ||
@@ -1431,7 +1435,7 @@ static mlan_status woal_pcie_register_dev(moal_handle *handle)
 	pdev = card->dev;
 	/* save adapter pointer in card */
 	card->handle = handle;
-	PRINTM(MERROR, "---yunjie--- woal_pcie_register_dev int mode %d\n", pcie_int_mode);
+
 	switch (pcie_int_mode) {
 	case PCIE_INT_MODE_MSIX:
 		pcie_int_mode = PCIE_INT_MODE_MSIX;
@@ -1458,8 +1462,8 @@ static mlan_status woal_pcie_register_dev(moal_handle *handle)
 						  &(card->msix_contexts[i]));
 
 				if (ret) {
-					PRINTM(MERROR,
-					       "---yunjie--- request_irq failed: ret=%d\n",
+					PRINTM(MFATAL,
+					       "request_irq failed: ret=%d\n",
 					       ret);
 					for (j = 0; j < i; j++)
 						free_irq(card->msix_entries[j]
@@ -1483,7 +1487,7 @@ static mlan_status woal_pcie_register_dev(moal_handle *handle)
 			ret = request_irq(pdev->irq, woal_pcie_interrupt, 0,
 					  "mrvl_pcie_msi", pdev);
 			if (ret) {
-				PRINTM(MERROR, "---yunjie--- request_irq failed: ret=%d\n",
+				PRINTM(MFATAL, "request_irq failed: ret=%d\n",
 				       ret);
 				pci_disable_msi(pdev);
 			} else {
@@ -1498,7 +1502,7 @@ static mlan_status woal_pcie_register_dev(moal_handle *handle)
 		ret = request_irq(pdev->irq, woal_pcie_interrupt, IRQF_SHARED,
 				  "mrvl_pcie", pdev);
 		if (ret) {
-			PRINTM(MERROR, "---yunjie--- request_irq failed: ret=%d\n", ret);
+			PRINTM(MFATAL, "request_irq failed: ret=%d\n", ret);
 			ret = MLAN_STATUS_FAILURE;
 			goto done;
 		}
@@ -1506,7 +1510,7 @@ static mlan_status woal_pcie_register_dev(moal_handle *handle)
 		break;
 
 	default:
-		PRINTM(MERROR, "---yunjie--- pcie_int_mode %d failed\n", pcie_int_mode);
+		PRINTM(MFATAL, "pcie_int_mode %d failed\n", pcie_int_mode);
 		ret = MLAN_STATUS_FAILURE;
 		goto done;
 		break;
@@ -1702,6 +1706,18 @@ static int woal_pcie_dump_reg_info(moal_handle *phandle, t_u8 *buffer)
 		drv_ptr += sprintf(drv_ptr, "reg:0x%02x value=0x%08x\n",
 				   config_reg_table[i], value);
 	}
+
+	reg = phandle->card_info->fw_stuck_code_reg;
+	if (reg != 0) {
+		woal_pcie_read_reg(phandle, reg, &value);
+		value = (value & 0xff00) >> 8;
+		if (value) {
+			PRINTM(MERROR, "FW in debug mode (0x%x)\n", value);
+			drv_ptr += sprintf(drv_ptr, "FW in debug mode (0x%x)\n",
+					   value);
+		}
+	}
+
 	drv_ptr += sprintf(drv_ptr, "FW Scrach Registers:\n");
 
 #if defined(PCIE8897) || defined(PCIE8997)
@@ -1851,6 +1867,16 @@ static void woal_pcie_reg_dbg(moal_handle *phandle)
 		PRINTM(MERROR, "reg:0x%02x value=0x%08x\n", config_reg_table[i],
 		       value);
 	}
+
+	reg = phandle->card_info->fw_stuck_code_reg;
+	if (reg != 0) {
+		woal_pcie_read_reg(phandle, reg, &value);
+		value = (value & 0xff00) >> 8;
+		if (value) {
+			PRINTM(MERROR, "FW in debug mode (0x%x)\n", value);
+		}
+	}
+
 	PRINTM(MMSG, "FW Scrach Registers:\n");
 #if defined(PCIE8897) || defined(PCIE8997)
 	if (IS_PCIE8897(phandle->card_type) ||
