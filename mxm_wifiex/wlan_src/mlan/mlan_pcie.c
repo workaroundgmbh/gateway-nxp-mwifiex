@@ -713,11 +713,12 @@ static mlan_status wlan_pcie_set_host_int_select_mask(mlan_adapter *pmadapter,
  *
  *  @param pmadapter    A pointer to mlan_adapter structure
  *  @param pmbuf        A pointer to mlan_buffer
+ *  @param mapping      mapping flag
  *
  *  @return 	        MLAN_STATUS_SUCCESS or MLAN_STATUS_FAILURE
  */
 static mlan_status wlan_pcie_send_boot_cmd(mlan_adapter *pmadapter,
-					   mlan_buffer *pmbuf)
+					   mlan_buffer *pmbuf, t_u8 mapping)
 {
 	mlan_status ret = MLAN_STATUS_SUCCESS;
 	pmlan_callbacks pcb = &pmadapter->callbacks;
@@ -730,13 +731,16 @@ static mlan_status wlan_pcie_send_boot_cmd(mlan_adapter *pmadapter,
 		return MLAN_STATUS_FAILURE;
 	}
 
-	if (MLAN_STATUS_FAILURE ==
-	    pcb->moal_map_memory(
-		    pmadapter->pmoal_handle, pmbuf->pbuf + pmbuf->data_offset,
-		    &pmbuf->buf_pa, WLAN_UPLD_SIZE, PCI_DMA_TODEVICE)) {
-		PRINTM(MERROR, "BootCmd: failed to moal_map_memory\n");
-		LEAVE();
-		return MLAN_STATUS_FAILURE;
+	if (mapping) {
+		if (MLAN_STATUS_FAILURE ==
+		    pcb->moal_map_memory(pmadapter->pmoal_handle,
+					 pmbuf->pbuf + pmbuf->data_offset,
+					 &pmbuf->buf_pa, WLAN_UPLD_SIZE,
+					 PCI_DMA_TODEVICE)) {
+			PRINTM(MERROR, "BootCmd: failed to moal_map_memory\n");
+			LEAVE();
+			return MLAN_STATUS_FAILURE;
+		}
 	}
 
 	if (!(pmbuf->pbuf && pmbuf->data_len && pmbuf->buf_pa)) {
@@ -877,7 +881,7 @@ static mlan_status wlan_pcie_send_vdll(mlan_adapter *pmadapter,
 
 #ifdef PCIE8997
 	if (!pmadapter->pcard_pcie->reg->use_adma) {
-		if (wlan_pcie_send_boot_cmd(pmadapter, pmbuf)) {
+		if (wlan_pcie_send_boot_cmd(pmadapter, pmbuf, MFALSE)) {
 			PRINTM(MERROR, "Failed to send vdll block to device\n");
 			ret = MLAN_STATUS_FAILURE;
 			goto done;
@@ -2824,7 +2828,7 @@ static mlan_status wlan_pcie_send_cmd(mlan_adapter *pmadapter,
 				goto done;
 			}
 		}
-		if (wlan_pcie_send_boot_cmd(pmadapter, pmbuf)) {
+		if (wlan_pcie_send_boot_cmd(pmadapter, pmbuf, MFALSE)) {
 			PRINTM(MERROR, "Failed to send hostcmd to device\n");
 			ret = MLAN_STATUS_FAILURE;
 			goto done;
@@ -3650,7 +3654,7 @@ static mlan_status wlan_pcie_prog_fw_w_helper(mlan_adapter *pmadapter,
 		}
 
 		/* Send the boot command to device */
-		if (wlan_pcie_send_boot_cmd(pmadapter, pmbuf)) {
+		if (wlan_pcie_send_boot_cmd(pmadapter, pmbuf, MTRUE)) {
 			PRINTM(MERROR,
 			       "Failed to send firmware download command\n");
 			goto done;
