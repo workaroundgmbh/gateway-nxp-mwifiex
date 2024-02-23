@@ -2102,7 +2102,7 @@ static int woal_cfg80211_auth_scan(moal_private *priv,
  *  @return       MLAN_STATUS_SUCCESS/MLAN_STATUS_PENDING
  *                  -- success, otherwise fail
  */
-static mlan_status woal_request_set_host_mlme(moal_private *priv, t_u8 *bssid)
+mlan_status woal_request_set_host_mlme(moal_private *priv, t_u8 *bssid)
 {
 	mlan_ioctl_req *req = NULL;
 	mlan_ds_bss *bss = NULL;
@@ -2610,11 +2610,7 @@ void woal_host_mlme_process_assoc_resp(moal_private *priv,
 	struct cfg80211_bss *bss = NULL;
 	unsigned long flags;
 	u8 *assoc_req_buf = NULL;
-#if ((CFG80211_VERSION_CODE >= KERNEL_VERSION(6, 7, 0)) || IMX_ANDROID_14)
-	struct cfg80211_rx_assoc_resp_data resp = {
-		.uapsd_queues = -1,
-	};
-#elif ((CFG80211_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)) || IMX_ANDROID_14)
+#if ((CFG80211_VERSION_CODE >= KERNEL_VERSION(6, 0, 0)) || IMX_ANDROID_14)
 	struct cfg80211_rx_assoc_resp resp = {
 		.uapsd_queues = -1,
 	};

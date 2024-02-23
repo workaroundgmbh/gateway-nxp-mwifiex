@@ -2434,6 +2434,7 @@ mlan_status woal_init_sw(moal_handle *handle)
 	device.inact_tmo = handle->params.inact_tmo;
 #ifdef UAP_SUPPORT
 	device.uap_max_sta = handle->params.uap_max_sta;
+	device.wacp_mode = handle->params.wacp_mode;
 #endif
 	device.mcs32 = handle->params.mcs32;
 	device.hs_wake_interval = handle->params.hs_wake_interval;

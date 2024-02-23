@@ -1931,6 +1931,8 @@ typedef struct _mlan_init_para {
 	t_u8 passive_to_active_scan;
 	/** uap max sta */
 	t_u8 uap_max_sta;
+	/** wacp mode */
+	t_u8 wacp_mode;
 	/** dfs w53 cfg */
 	t_u8 dfs53cfg;
 	/** dfs_offload */

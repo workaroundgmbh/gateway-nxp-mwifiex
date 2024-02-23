@@ -489,6 +489,21 @@ typedef MLAN_PACK_START struct _tx_status_event {
 	t_u8 status;
 } MLAN_PACK_END tx_status_event;
 
+typedef MLAN_PACK_START struct _tx_mgmt_status_event {
+	/** packet type */
+	t_u8 packet_type;
+	/** tx_token_id */
+	t_u8 tx_token_id;
+	/** 0--success, 1--fail, 2--watchdogtimeout */
+	t_u8 status;
+} MLAN_PACK_END tx_mgmt_status_event;
+
+typedef MLAN_PACK_START struct _tx_bulk_status_event {
+	/* bulk event is multi set for tx_status [bulk1 bulk2 ...bulk128]
+     bulk1 { packet_type, tx_token_id, status } so on.
+  */
+	tx_mgmt_status_event bulk_events[128];
+} MLAN_PACK_END tx_bulk_status_event;
 /**
  *  Sructure to retrieve the scan table
  */

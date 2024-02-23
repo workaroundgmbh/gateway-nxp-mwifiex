@@ -740,9 +740,7 @@ static t_u8 *wlan_strchr(t_u8 *s, int c)
 	while (*pos != '\0') {
 		if (*pos == (t_u8)c)
 			return pos;
-		if (!wlan_secure_add(pos, 1, pos, TYPE_PTR)) {
-			PRINTM(MERROR, "pos is invalid\n");
-		}
+		pos++;
 	}
 	return MNULL;
 }

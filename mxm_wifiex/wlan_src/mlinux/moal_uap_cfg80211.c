@@ -263,16 +263,16 @@ static t_u8 woal_check_rsn_ie(IEEEtypes_Rsn_t *rsn_ie,
 			break;
 		}
 	}
-	left -= sizeof(IEEEtypes_Rsn_t) + (count - 1) * sizeof(wpa_suite);
-	if (left < (int)sizeof(wpa_suite_auth_key_mgmt_t))
+	left -= sizeof(IEEEtypes_Rsn_t) + (count) * sizeof(wpa_suite);
+	if (left <
+	    ((int)sizeof(wpa_suite_auth_key_mgmt_t) + (int)sizeof(wpa_suite)))
 		return MFALSE;
-	key_mgmt =
-		(wpa_suite_auth_key_mgmt_t *)((u8 *)rsn_ie +
-					      sizeof(IEEEtypes_Rsn_t) +
-					      (count - 1) * sizeof(wpa_suite));
+	key_mgmt = (wpa_suite_auth_key_mgmt_t *)((u8 *)rsn_ie +
+						 sizeof(IEEEtypes_Rsn_t) +
+						 (count) * sizeof(wpa_suite));
 	count = woal_le16_to_cpu(key_mgmt->count);
-	if (left < (int)(sizeof(wpa_suite_auth_key_mgmt_t) +
-			 (count - 1) * sizeof(wpa_suite)))
+	if (left < ((int)sizeof(wpa_suite_auth_key_mgmt_t) +
+		    (count) * (int)sizeof(wpa_suite)))
 		return MFALSE;
 	for (i = 0; i < count; i++) {
 		switch (key_mgmt->list[i].type) {
@@ -343,16 +343,16 @@ static t_u8 woal_check_wpa_ie(IEEEtypes_Wpa_t *wpa_ie,
 			break;
 		}
 	}
-	left -= sizeof(IEEEtypes_Wpa_t) + (count - 1) * sizeof(wpa_suite);
-	if (left < (int)sizeof(wpa_suite_auth_key_mgmt_t))
+	left -= sizeof(IEEEtypes_Wpa_t) + (count) * sizeof(wpa_suite);
+	if (left <
+	    ((int)sizeof(wpa_suite_auth_key_mgmt_t) + (int)sizeof(wpa_suite)))
 		return MFALSE;
-	key_mgmt =
-		(wpa_suite_auth_key_mgmt_t *)((u8 *)wpa_ie +
-					      sizeof(IEEEtypes_Wpa_t) +
-					      (count - 1) * sizeof(wpa_suite));
+	key_mgmt = (wpa_suite_auth_key_mgmt_t *)((u8 *)wpa_ie +
+						 sizeof(IEEEtypes_Wpa_t) +
+						 (count) * sizeof(wpa_suite));
 	count = woal_le16_to_cpu(key_mgmt->count);
-	if (left < (int)(sizeof(wpa_suite_auth_key_mgmt_t) +
-			 (count - 1) * sizeof(wpa_suite)))
+	if (left < ((int)sizeof(wpa_suite_auth_key_mgmt_t) +
+		    (count) * (int)sizeof(wpa_suite)))
 		return MFALSE;
 	for (i = 0; i < count; i++) {
 		switch (key_mgmt->list[i].type) {

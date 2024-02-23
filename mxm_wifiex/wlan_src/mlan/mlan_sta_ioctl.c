@@ -2613,7 +2613,7 @@ static mlan_status wlan_sec_ioctl_set_wep_key(pmlan_adapter pmadapter,
 	mrvl_wep_key_t *pwep_key = MNULL;
 	int index;
 	int i = 0;
-
+	int max_key_index = 5;
 	ENTER();
 
 	if (pmpriv->wep_key_curr_index >= MRVL_NUM_WEP_KEY)
@@ -2625,8 +2625,11 @@ static mlan_status wlan_sec_ioctl_set_wep_key(pmlan_adapter pmadapter,
 		sec->param.encrypt_key.key_index = index;
 	} else {
 		if (sec->param.encrypt_key.key_index >= MRVL_NUM_WEP_KEY) {
+			if (IS_FW_SUPPORT_BEACON_PROT(pmadapter))
+				max_key_index = 7;
 			if ((sec->param.encrypt_key.key_remove == MTRUE) &&
-			    (sec->param.encrypt_key.key_index <= 5)) {
+			    (sec->param.encrypt_key.key_index <=
+			     max_key_index)) {
 				/* call firmware remove key */
 				ret = wlan_prepare_cmd(
 					pmpriv, HostCmd_CMD_802_11_KEY_MATERIAL,
@@ -2637,7 +2640,8 @@ static mlan_status wlan_sec_ioctl_set_wep_key(pmlan_adapter pmadapter,
 					ret = MLAN_STATUS_PENDING;
 				goto exit;
 			}
-			PRINTM(MERROR, "Key_index is invalid\n");
+			PRINTM(MERROR, "Key_index %d is invalid.\n",
+			       sec->param.encrypt_key.key_index);
 			ret = MLAN_STATUS_FAILURE;
 			goto exit;
 		}

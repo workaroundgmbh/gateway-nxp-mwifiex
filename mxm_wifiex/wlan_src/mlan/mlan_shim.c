@@ -325,6 +325,7 @@ mlan_status mlan_register(pmlan_device pmdevice, t_void **ppmlan_adapter)
 	pmadapter->card_type = pmdevice->card_type;
 	pmadapter->card_rev = pmdevice->card_rev;
 	pmadapter->init_para.uap_max_sta = pmdevice->uap_max_sta;
+	pmadapter->init_para.wacp_mode = pmdevice->wacp_mode;
 	pmadapter->init_para.mcs32 = pmdevice->mcs32;
 	pmadapter->init_para.antcfg = pmdevice->antcfg;
 	pmadapter->init_para.dmcs = pmdevice->dmcs;
@@ -1459,10 +1460,16 @@ mlan_status mlan_send_packet(t_void *padapter, pmlan_buffer pmbuf)
 
 	/** Identify ICMP packet from ETH_IP packet. ICMP packet in IP header
 	 * Protocol field is 0x01 */
-	if (eth_type == MLAN_ETHER_PKT_TYPE_IP) {
-		ip_protocol = *((t_u8 *)(pmbuf->pbuf + pmbuf->data_offset +
-					 MLAN_ETHER_PKT_TYPE_OFFSET +
-					 MLAN_IP_PROTOCOL_OFFSET));
+	/** Enable the ICMP_VIA_BYPASS_TXQ only if wacp_mode is enabled */
+	if ((pmadapter->init_para.wacp_mode) &&
+	    (pmpriv->bss_role == MLAN_BSS_ROLE_UAP &&
+	     pmpriv->uap_bss_started)) {
+		if (eth_type == MLAN_ETHER_PKT_TYPE_IP) {
+			ip_protocol =
+				*((t_u8 *)(pmbuf->pbuf + pmbuf->data_offset +
+					   MLAN_ETHER_PKT_TYPE_OFFSET +
+					   MLAN_IP_PROTOCOL_OFFSET));
+		}
 	}
 
 	if ((eth_type == MLAN_ETHER_PKT_TYPE_EAPOL) ||

@@ -2704,6 +2704,88 @@ static mlan_status wlan_process_defer_event(moal_handle *handle,
 	return status;
 }
 
+#if defined(STA_CFG80211) || defined(UAP_CFG80211)
+/**
+ *  @brief This function handles event receive
+ *
+ *  @param priv Pointer to the MOAL private
+ *  @param tx_status  pointer to tx_mgmt_status_event structure
+ *
+ *  @return         N/A
+ */
+t_void woal_process_event_tx_status(moal_private *priv,
+				    tx_mgmt_status_event *tx_status)
+{
+	unsigned long flag;
+#if defined(STA_CFG80211) || defined(UAP_CFG80211)
+	moal_private *remain_priv = NULL;
+	t_u8 channel_status;
+#endif
+	struct tx_status_info *tx_info = NULL;
+	PRINTM(MEVENT,
+	       "Wlan: Tx status: tx_token=%d, pkt_type=0x%x, status=%d priv->tx_seq_num=%d\n",
+	       tx_status->tx_token_id, tx_status->packet_type,
+	       tx_status->status, priv->tx_seq_num);
+	spin_lock_irqsave(&priv->tx_stat_lock, flag);
+	tx_info = woal_get_tx_info(priv, tx_status->tx_token_id);
+	if (tx_info) {
+		bool ack;
+		struct sk_buff *skb = (struct sk_buff *)tx_info->tx_skb;
+		list_del(&tx_info->link);
+		spin_unlock_irqrestore(&priv->tx_stat_lock, flag);
+		if (!tx_status->status)
+			ack = true;
+		else
+			ack = false;
+#if defined(STA_CFG80211) || defined(UAP_CFG80211)
+		if (priv->phandle->remain_on_channel &&
+		    tx_info->cancel_remain_on_channel) {
+			remain_priv =
+				priv->phandle
+					->priv[priv->phandle->remain_bss_index];
+			if (remain_priv) {
+				if (woal_cfg80211_remain_on_channel_cfg(
+					    remain_priv, MOAL_NO_WAIT, MTRUE,
+					    &channel_status, NULL, 0, 0))
+					PRINTM(MERROR,
+					       "remain_on_channel: Failed to cancel\n");
+
+				priv->phandle->remain_on_channel = MFALSE;
+			}
+		}
+#endif
+		PRINTM(MEVENT, "Wlan: Tx status=%d\n", ack);
+#if defined(STA_CFG80211) || defined(UAP_CFG80211)
+		if (tx_info->tx_cookie) {
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
+#if CFG80211_VERSION_CODE < KERNEL_VERSION(3, 6, 0)
+			cfg80211_mgmt_tx_status(priv->netdev,
+						tx_info->tx_cookie, skb->data,
+						skb->len, ack, GFP_ATOMIC);
+#else
+			cfg80211_mgmt_tx_status(priv->wdev, tx_info->tx_cookie,
+						skb->data, skb->len, ack,
+						GFP_ATOMIC);
+#endif
+#endif
+		}
+#if defined(STA_CFG80211) || defined(UAP_CFG80211)
+#if CFG80211_VERSION_CODE >= KERNEL_VERSION(3, 14, 0)
+		woal_packet_fate_monitor(
+			priv, PACKET_TYPE_TX,
+			ack ? TX_PKT_FATE_ACKED : TX_PKT_FATE_SENT,
+			FRAME_TYPE_80211_MGMT, 0, 0, skb->data, skb->len);
+#endif
+#endif
+#endif
+		dev_kfree_skb_any(skb);
+		kfree(tx_info);
+	} else {
+		spin_unlock_irqrestore(&priv->tx_stat_lock, flag);
+	}
+}
+#endif
+
 /**
  *  @brief This function handles event receive
  *
@@ -4567,6 +4649,25 @@ mlan_status moal_recv_event(t_void *pmoal, pmlan_event pmevent)
 			kfree(tx_info);
 		} else {
 			spin_unlock_irqrestore(&priv->tx_stat_lock, flag);
+		}
+#endif
+	} break;
+	case MLAN_EVENT_ID_FW_TX_BULK_STATUS: {
+#if defined(STA_CFG80211) || defined(UAP_CFG80211)
+		tx_bulk_status_event *tx_status =
+			(tx_bulk_status_event *)(pmevent->event_buf + 4);
+		t_u8 curID = 0, num_of_events = 0, payload_len = 0;
+
+		payload_len = (pmevent->event_len - 4);
+		num_of_events =
+			((payload_len) / (sizeof(tx_mgmt_status_event)));
+
+		PRINTM(MEVENT,
+		       "Wlan: Bulk Tx status total_len=%d num_of_events=%d\n",
+		       payload_len, num_of_events);
+		while (curID < num_of_events) {
+			woal_process_event_tx_status(
+				priv, &(tx_status->bulk_events[curID++]));
 		}
 #endif
 	} break;

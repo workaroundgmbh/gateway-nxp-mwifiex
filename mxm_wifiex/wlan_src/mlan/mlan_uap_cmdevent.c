@@ -2488,6 +2488,7 @@ static mlan_status wlan_uap_ret_sys_config(pmlan_private pmpriv,
 	MrvlIEtypes_MacAddr_t *tlv =
 		(MrvlIEtypes_MacAddr_t *)sys_config->tlv_buffer;
 	mlan_ds_misc_custom_ie *cust_ie = MNULL;
+	MrvlIEtypes_wacp_mode_t *tlv_wacp_mode = MNULL;
 	tlvbuf_max_mgmt_ie *max_mgmt_ie = MNULL;
 	MrvlIEtypes_wmm_parameter_t *tlv_wmm_parameter =
 		(MrvlIEtypes_wmm_parameter_t *)sys_config->tlv_buffer;
@@ -2806,6 +2807,17 @@ static mlan_status wlan_uap_ret_sys_config(pmlan_private pmpriv,
 								sizeof(MrvlIEtypesHeader_t),
 							sizeof(tlvbuf_max_mgmt_ie));
 					}
+				}
+			} else if (misc->sub_command ==
+				   MLAN_OID_MISC_WACP_MODE) {
+				tlv_wacp_mode = (MrvlIEtypes_wacp_mode_t *)
+							sys_config->tlv_buffer;
+				misc->param.wacp_mode =
+					tlv_wacp_mode->wacp_mode;
+				/** update the wacp_mode in mlan_adapter */
+				if (pioctl_buf->action == MLAN_ACT_SET) {
+					pmpriv->adapter->init_para.wacp_mode =
+						misc->param.wacp_mode;
 				}
 			}
 		}
@@ -6053,6 +6065,10 @@ mlan_status wlan_ops_uap_process_event(t_void *priv)
 	case EVENT_TX_STATUS_REPORT:
 		PRINTM(MINFO, "EVENT: TX_STATUS\n");
 		pevent->event_id = MLAN_EVENT_ID_FW_TX_STATUS;
+		break;
+	case EVENT_TX_STATUS_BULK_REPORT:
+		PRINTM(MINFO, "EVENT: TX_BULK_STATUS\n");
+		pevent->event_id = MLAN_EVENT_ID_FW_TX_BULK_STATUS;
 		break;
 	case EVENT_BT_COEX_WLAN_PARA_CHANGE:
 		PRINTM(MEVENT, "EVENT: BT coex wlan param update\n");
