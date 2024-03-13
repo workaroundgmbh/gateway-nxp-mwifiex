@@ -3429,7 +3429,7 @@ extern t_u32 drvdbg;
 	do {                                                                   \
 		woal_print(level, msg);                                        \
 		if (drvdbg & MMSG)                                             \
-			printk(KERN_ALERT msg);                                \
+			printk(KERN_INFO msg);                                \
 	} while (0)
 
 static inline void woal_print(t_u32 level, char *fmt, ...)
