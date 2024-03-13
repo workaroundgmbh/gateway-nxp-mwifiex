@@ -5081,7 +5081,7 @@ moal_print(t_void *pmoal, t_u32 level, char *pformat, IN...)
  */
 t_void moal_print_netintf(t_void *pmoal, t_u32 bss_index, t_u32 level)
 {
-#ifdef DEBUG_LEVEL1
+#if 0
 	moal_handle *phandle = (moal_handle *)pmoal;
 
 	if (phandle) {
