@@ -30,6 +30,8 @@ Change log:
 #ifndef _MLAN_MAIN_H_
 #define _MLAN_MAIN_H_
 
+#include <linux/kern_levels.h>
+
 #ifdef DEBUG_LEVEL1
 extern t_void (*print_callback)(t_pvoid pmoal_handle, t_u32 level,
 				char *pformat, IN...);
@@ -97,63 +99,63 @@ extern t_u32 mlan_drvdbg;
 #define PRINTM_MFW_D(msg...)                                                   \
 	do {                                                                   \
 		if ((mlan_drvdbg & MFW_D) && (print_callback))                 \
-			print_callback(MNULL, MFW_D, msg);                     \
+			print_callback(MNULL, MFW_D, KERN_INFO msg);                     \
 	} while (0)
 #define PRINTM_MCMD_D(msg...)                                                  \
 	do {                                                                   \
 		if ((mlan_drvdbg & MCMD_D) && (print_callback))                \
-			print_callback(MNULL, MCMD_D, msg);                    \
+			print_callback(MNULL, MCMD_D, KERN_INFO msg);                    \
 	} while (0)
 #define PRINTM_MDAT_D(msg...)                                                  \
 	do {                                                                   \
 		if ((mlan_drvdbg & MDAT_D) && (print_callback))                \
-			print_callback(MNULL, MDAT_D, msg);                    \
+			print_callback(MNULL, MDAT_D, KERN_INFO msg);                    \
 	} while (0)
 #define PRINTM_MIF_D(msg...)                                                   \
 	do {                                                                   \
 		if ((mlan_drvdbg & MIF_D) && (print_callback))                 \
-			print_callback(MNULL, MIF_D, msg);                     \
+			print_callback(MNULL, MIF_D, KERN_INFO msg);                     \
 	} while (0)
 
 #define PRINTM_MIOCTL(msg...)                                                  \
 	do {                                                                   \
 		if ((mlan_drvdbg & MIOCTL) && (print_callback))                \
-			print_callback(MNULL, MIOCTL, msg);                    \
+			print_callback(MNULL, MIOCTL, KERN_INFO msg);                    \
 	} while (0)
 #define PRINTM_MINTR(msg...)                                                   \
 	do {                                                                   \
 		if ((mlan_drvdbg & MINTR) && (print_callback))                 \
-			print_callback(MNULL, MINTR, msg);                     \
+			print_callback(MNULL, MINTR, KERN_INFO msg);                     \
 	} while (0)
 #define PRINTM_MEVENT(msg...)                                                  \
 	do {                                                                   \
 		if ((mlan_drvdbg & MEVENT) && (print_callback))                \
-			print_callback(MNULL, MEVENT, msg);                    \
+			print_callback(MNULL, MEVENT, KERN_INFO msg);                    \
 	} while (0)
 #define PRINTM_MCMND(msg...)                                                   \
 	do {                                                                   \
 		if ((mlan_drvdbg & MCMND) && (print_callback))                 \
-			print_callback(MNULL, MCMND, msg);                     \
+			print_callback(MNULL, MCMND, KERN_INFO msg);                     \
 	} while (0)
 #define PRINTM_MDATA(msg...)                                                   \
 	do {                                                                   \
 		if ((mlan_drvdbg & MDATA) && (print_callback))                 \
-			print_callback(MNULL, MDATA, msg);                     \
+			print_callback(MNULL, MDATA, KERN_INFO msg);                     \
 	} while (0)
 #define PRINTM_MERROR(msg...)                                                  \
 	do {                                                                   \
 		if ((mlan_drvdbg & MERROR) && (print_callback))                \
-			print_callback(MNULL, MERROR, msg);                    \
+			print_callback(MNULL, MERROR, KERN_ERR msg);                    \
 	} while (0)
 #define PRINTM_MFATAL(msg...)                                                  \
 	do {                                                                   \
 		if ((mlan_drvdbg & MFATAL) && (print_callback))                \
-			print_callback(MNULL, MFATAL, msg);                    \
+			print_callback(MNULL, MFATAL, KERN_ERR msg);                    \
 	} while (0)
 #define PRINTM_MMSG(msg...)                                                    \
 	do {                                                                   \
 		if ((mlan_drvdbg & MMSG) && (print_callback))                  \
-			print_callback(MNULL, MMSG, msg);                      \
+			print_callback(MNULL, MMSG, KERN_INFO msg);                      \
 	} while (0)
 
 #define PRINTM_MSCH_D(msg...)                                                  \
@@ -162,7 +164,7 @@ extern t_u32 mlan_drvdbg;
 			print_callback(MNULL, MSCH_D, msg);                    \
 	} while (0)
 
-#define PRINTM(level, msg...) PRINTM_##level((char *)msg)
+#define PRINTM(level, msg...) PRINTM_##level(msg)
 
 /** Log debug message */
 #ifdef __GNUC__
